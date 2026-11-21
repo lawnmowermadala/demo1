@@ -52,6 +52,15 @@ const EDITS: { title: string; blurb: string; dept?: string; all?: boolean }[] = 
   { title: "The Gift Collection", blurb: "Thoughtful finds for the people she loves." },
 ];
 
+/** The brand direction shown in "Our story". */
+const STORY_PILLARS = [
+  "Contemporary African luxury.",
+  "Editorial, artistic and sophisticated.",
+  "Minimal but expressive.",
+  "Strong photography and visual storytelling.",
+  "A refined and consistent customer experience.",
+];
+
 function Shop() {
   const { data } = useSuspenseQuery(storefrontQuery);
   const { products, departments } = data;
@@ -104,6 +113,7 @@ function Shop() {
     { label: "Baby & Little Ones", go: () => pick("kids"), soon: !deptOpen("kids") },
     { label: "Accessories", go: () => pick("accessories"), soon: !deptOpen("accessories") },
     { label: "Discover", go: () => scrollToId("discover") },
+    { label: "Our Story", go: () => scrollToId("story") },
   ];
 
   const submitOrder = async (e: FormEvent<HTMLFormElement>) => {
@@ -309,12 +319,38 @@ function Shop() {
           </div>
         </section>
 
-        {/* STORY: the owner's story goes here. Replace the placeholder text below once it is ready. */}
         <section id="story" className="scroll-mt-32">
-          <div className="mx-auto max-w-3xl px-5 py-16 text-center md:px-10">
+          <div className="mx-auto max-w-3xl px-5 py-20 text-center md:px-10">
             <p className="eyebrow text-gold">Our story</p>
-            <h2 className="mt-2 text-4xl font-bold md:text-5xl">Style that moves with you</h2>
-            <p className="mt-6 text-muted-foreground">Our story is coming soon.</p>
+            <h2 className="mt-2 text-4xl font-bold md:text-6xl">Style that moves with you</h2>
+            <div className="mx-auto mt-6 h-px w-16 bg-gold" />
+            <p className="mt-8 font-display text-2xl leading-snug md:text-3xl">
+              A sophisticated, contemporary luxury experience for Tsholo R Fashion House.
+            </p>
+            <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
+              <p>
+                We combine the visual appeal and storytelling of an international luxury fashion house with the functionality of a high-performing online store.
+              </p>
+              <p>
+                We want you to experience the brand through its imagery, creative presentation, collections and curated discoveries, with effortless access to purchasing products. The brand communicates through its visual identity and presentation rather than lengthy explanations.
+              </p>
+            </div>
+          </div>
+          <div className="bg-cream">
+            <div className="mx-auto max-w-7xl px-5 py-14 md:px-10">
+              <p className="eyebrow text-center text-gold">Our direction</p>
+              <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {STORY_PILLARS.map((t, i) => (
+                  <li key={t} className="border border-border bg-card p-6 text-center">
+                    <span className="eyebrow text-gold">{String(i + 1).padStart(2, "0")}</span>
+                    <p className="mt-3 font-display text-xl font-semibold leading-snug">{t}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="mx-auto mt-12 max-w-2xl text-center font-display text-2xl leading-snug md:text-3xl">
+                A lasting digital home for Tsholo R Fashion House, not simply an online product catalogue.
+              </p>
+            </div>
           </div>
         </section>
 
