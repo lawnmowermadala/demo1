@@ -46,10 +46,10 @@ const womenFirst = (a: Product, b: Product) => Number(b.department === "women") 
 /** The five curated edits shown in the Discover section. `dept` links an edit to a shop department. */
 const EDITS: { title: string; blurb: string; dept?: string; all?: boolean }[] = [
   { title: "The Wardrobe", blurb: "Fashion.", all: true },
-  { title: "The Art Edit", blurb: "African art and creative collaborations." },
-  { title: "The Beauty Cabinet", blurb: "Beauty and fragrance." },
-  { title: "The Objects Edit", blurb: "Accessories and lifestyle.", dept: "accessories" },
-  { title: "The Gift Collection", blurb: "Thoughtful finds for the people she loves." },
+  { title: "The Art Edit", blurb: "African art and creative collaborations.", dept: "art" },
+  { title: "The Beauty Cabinet", blurb: "Beauty and fragrance.", dept: "beauty" },
+  { title: "The Objects Edit", blurb: "Accessories and lifestyle.", dept: "home-lifestyle" },
+  { title: "The Gift Collection", blurb: "Thoughtful finds for the people she loves.", dept: "gifts" },
 ];
 
 /** The founder's own words (from her Inhlanyelo Hub Bosadi Artisan Fashion Design Programme questionnaire). */
