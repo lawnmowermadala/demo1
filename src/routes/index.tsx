@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState, type FormEvent } from "react";
-import { Search, ShoppingBag, Minus, Plus, Sparkles, ShieldCheck, Truck, CheckCircle2, MapPin, Phone, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
+import { Search, ShoppingBag, Minus, Plus, Sparkles, ShieldCheck, Truck, CheckCircle2, MapPin, Phone, MessageCircle, Menu as MenuIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import heroImg from "@/assets/hero-ankara.jpg";
 import { LOGO_SRC } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -61,12 +60,12 @@ function Shop() {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [bagOpen, setBagOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [step, setStep] = useState<"bag" | "details" | "done">("bag");
   const [placed, setPlaced] = useState<{ orderNumber: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [news, setNews] = useState(false);
   const [viewing, setViewing] = useState<Product | null>(null);
-  const menuRef = useRef<HTMLUListElement>(null);
 
   const list = useMemo(() => [...visibleProducts(products, departments, filter, query)].sort(womenFirst), [products, departments, filter, query]);
   const newArrivals = useMemo(() => [...visibleProducts(products, departments, "new")].sort(womenFirst).slice(0, 4), [products, departments]);
@@ -96,10 +95,7 @@ function Shop() {
     setBagOpen(true);
   };
 
-  /** Slides the main menu left or right. */
-  const slideMenu = (dir: 1 | -1) => menuRef.current?.scrollBy({ left: dir * 200, behavior: "smooth" });
-
-  /** Main menu. Shop items follow the shop's departments and show "Soon" while a department is closed. */
+  /** Main menu, opened from the three-bar button at the top left. Shop items follow the shop's departments and show "Soon" while a department is closed. */
   const menu: { label: string; go: () => void; soon?: boolean }[] = [
     { label: "Home", go: () => window.scrollTo({ top: 0, behavior: "smooth" }) },
     { label: "New In", go: () => pick("new") },
@@ -186,7 +182,10 @@ function Shop() {
       </div>
 
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-5 py-4 md:flex-nowrap md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-5 py-4 md:flex-nowrap md:gap-4 md:px-10">
+          <Button variant="ghost" size="icon" aria-label="Open menu" onClick={() => setMenuOpen(true)} className="-ml-2 size-10">
+            <MenuIcon className="size-6" />
+          </Button>
           <a href="/" className="flex items-center" aria-label="Tsholo R Fashion House home">
             <img src={LOGO_SRC} alt="Tsholo R Fashion House" width={632} height={276} className="h-14 w-auto md:h-20" />
           </a>
@@ -202,22 +201,22 @@ function Shop() {
             <ShoppingBag /> Bag ({count})
           </Button>
         </div>
-        <nav aria-label="Main menu" className="border-t border-border bg-background">
-          <div className="mx-auto flex max-w-7xl items-center gap-1 px-2 md:px-6">
-            <button type="button" onClick={() => slideMenu(-1)} aria-label="Slide menu left" className="grid size-8 shrink-0 place-items-center text-muted-foreground hover:text-foreground">
-              <ChevronLeft className="size-5" />
-            </button>
-            <ul
-              ref={menuRef}
-              className="flex flex-1 snap-x items-center gap-x-8 overflow-x-auto scroll-smooth whitespace-nowrap px-2 py-3 [scrollbar-width:none] md:justify-center md:gap-x-10 [&::-webkit-scrollbar]:hidden"
-            >
+      </header>
+
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="left" className="w-72">
+          <SheetHeader>
+            <SheetTitle className="font-display text-2xl">Menu</SheetTitle>
+          </SheetHeader>
+          <nav aria-label="Main menu" className="mt-6">
+            <ul className="flex flex-col">
               {menu.map((m) => (
-                <li key={m.label} className="snap-start">
+                <li key={m.label} className="border-b border-border">
                   <button
                     type="button"
-                    onClick={m.go}
                     disabled={m.soon}
-                    className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70"
+                    onClick={() => { setMenuOpen(false); m.go(); }}
+                    className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70"
                   >
                     {m.label}
                     {m.soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[0.55rem] tracking-wider">Soon</span>}
@@ -225,29 +224,17 @@ function Shop() {
                 </li>
               ))}
             </ul>
-            <button type="button" onClick={() => slideMenu(1)} aria-label="Slide menu right" className="grid size-8 shrink-0 place-items-center text-muted-foreground hover:text-foreground">
-              <ChevronRight className="size-5" />
-            </button>
-          </div>
-        </nav>
-      </header>
+          </nav>
+        </SheetContent>
+      </Sheet>
 
       <main>
         <section className="bg-cream">
-          {/* Full-width brand banner (public/hero-banner.png). If it fails to load the old photo is shown. */}
-          <img
-            src="/hero-banner.png"
-            onError={(e) => {
-              const el = e.currentTarget;
-              if (el.dataset.fallback) return;
-              el.dataset.fallback = "1";
-              el.src = heroImg;
-            }}
-            alt="Tsholo R Fashion House. Style that moves with you. Custom designs, alterations and medical scrub uniforms. Dress with purpose."
-            width={2048}
-            height={768}
-            className="block h-auto w-full"
-          />
+          <div className="mx-auto max-w-3xl px-5 py-14 text-center md:px-10 md:py-20">
+            <p className="eyebrow text-gold">Tsholo R Fashion House</p>
+            <h1 className="mt-3 text-5xl font-bold md:text-6xl">Style that moves with you</h1>
+            <p className="mt-4 text-muted-foreground">Contemporary African luxury. Dress with purpose.</p>
+          </div>
         </section>
         <div className="kente-rule" />
 
