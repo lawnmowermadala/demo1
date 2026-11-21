@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useState, type FormEvent } from "react";
-import { Search, ShoppingBag, Minus, Plus, Sparkles, ShieldCheck, Truck, CheckCircle2, MapPin, Phone, MessageCircle } from "lucide-react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
+import { Search, ShoppingBag, Minus, Plus, Sparkles, ShieldCheck, Truck, CheckCircle2, MapPin, Phone, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 import heroImg from "@/assets/hero-ankara.jpg";
@@ -41,6 +41,9 @@ type CartLine = Product & { qty: number; size?: string | undefined; key: string 
 
 const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
+/** Keeps the shop's own order but lists women's products first. */
+const womenFirst = (a: Product, b: Product) => Number(b.department === "women") - Number(a.department === "women");
+
 /** The five curated edits shown in the Discover section. `dept` links an edit to a shop department. */
 const EDITS: { title: string; blurb: string; dept?: string; all?: boolean }[] = [
   { title: "The Wardrobe", blurb: "Fashion.", all: true },
@@ -63,9 +66,10 @@ function Shop() {
   const [busy, setBusy] = useState(false);
   const [news, setNews] = useState(false);
   const [viewing, setViewing] = useState<Product | null>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
 
-  const list = useMemo(() => visibleProducts(products, departments, filter, query), [products, departments, filter, query]);
-  const newArrivals = useMemo(() => visibleProducts(products, departments, "new").slice(0, 4), [products, departments]);
+  const list = useMemo(() => [...visibleProducts(products, departments, filter, query)].sort(womenFirst), [products, departments, filter, query]);
+  const newArrivals = useMemo(() => [...visibleProducts(products, departments, "new")].sort(womenFirst).slice(0, 4), [products, departments]);
   const openDepts = departments.filter((d) => d.enabled);
   const deptOpen = (id: string) => departments.find((d) => d.id === id)?.enabled ?? false;
   const count = cart.reduce((n, l) => n + l.qty, 0);
@@ -91,6 +95,9 @@ function Shop() {
     if (step === "done") setStep("bag");
     setBagOpen(true);
   };
+
+  /** Slides the main menu left or right. */
+  const slideMenu = (dir: 1 | -1) => menuRef.current?.scrollBy({ left: dir * 200, behavior: "smooth" });
 
   /** Main menu. Shop items follow the shop's departments and show "Soon" while a department is closed. */
   const menu: { label: string; go: () => void; soon?: boolean }[] = [
@@ -196,21 +203,32 @@ function Shop() {
           </Button>
         </div>
         <nav aria-label="Main menu" className="border-t border-border bg-background">
-          <ul className="mx-auto flex max-w-7xl items-center gap-x-7 overflow-x-auto whitespace-nowrap px-5 py-3 md:justify-center md:gap-x-10 md:px-10">
-            {menu.map((m) => (
-              <li key={m.label}>
-                <button
-                  type="button"
-                  onClick={m.go}
-                  disabled={m.soon}
-                  className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70"
-                >
-                  {m.label}
-                  {m.soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[0.55rem] tracking-wider">Soon</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="mx-auto flex max-w-7xl items-center gap-1 px-2 md:px-6">
+            <button type="button" onClick={() => slideMenu(-1)} aria-label="Slide menu left" className="grid size-8 shrink-0 place-items-center text-muted-foreground hover:text-foreground">
+              <ChevronLeft className="size-5" />
+            </button>
+            <ul
+              ref={menuRef}
+              className="flex flex-1 snap-x items-center gap-x-8 overflow-x-auto scroll-smooth whitespace-nowrap px-2 py-3 [scrollbar-width:none] md:justify-center md:gap-x-10 [&::-webkit-scrollbar]:hidden"
+            >
+              {menu.map((m) => (
+                <li key={m.label} className="snap-start">
+                  <button
+                    type="button"
+                    onClick={m.go}
+                    disabled={m.soon}
+                    className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70"
+                  >
+                    {m.label}
+                    {m.soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[0.55rem] tracking-wider">Soon</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button type="button" onClick={() => slideMenu(1)} aria-label="Slide menu right" className="grid size-8 shrink-0 place-items-center text-muted-foreground hover:text-foreground">
+              <ChevronRight className="size-5" />
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -230,12 +248,6 @@ function Shop() {
             height={768}
             className="block h-auto w-full"
           />
-          <div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-3 px-5 py-8 md:px-10">
-            <Button variant="gold" size="xl" onClick={() => pick("women")}>Shop women</Button>
-            {openDepts.some((d) => d.id === "men") && <Button variant="bag" size="xl" className="bg-background/70" onClick={() => pick("men")}>Shop men</Button>}
-            {openDepts.some((d) => d.id === "kids") && <Button variant="bag" size="xl" className="bg-background/70" onClick={() => pick("kids")}>Shop kids</Button>}
-            {openDepts.some((d) => d.id === "family") && <Button variant="bag" size="xl" className="bg-background/70" onClick={() => pick("family")}>Family sets</Button>}
-          </div>
         </section>
         <div className="kente-rule" />
 
@@ -249,7 +261,7 @@ function Shop() {
                 </div>
                 <button onClick={() => pick("new")} className="text-sm font-semibold text-gold underline-offset-4 hover:underline">See all new pieces</button>
               </div>
-              <div className="mt-8 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
                 {newArrivals.map((p) => card(p))}
               </div>
             </div>
@@ -275,7 +287,7 @@ function Shop() {
           </div>
 
           {list.length ? (
-            <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
               {list.map((p) => card(p))}
             </div>
           ) : (
