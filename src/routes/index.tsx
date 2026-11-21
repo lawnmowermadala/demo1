@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { formatRand, needsSize, visibleProducts, type Filter, type Product } from "@/lib/catalog";
 import { ProductDialog } from "@/components/shop/product-dialog";
-import { ShopVideo } from "@/components/shop/shop-video";
 import { SubscribeForm, subscribe, subscribeMessage } from "@/components/shop/subscribe-form";
 import { Testimonials } from "@/components/shop/testimonials";
 import { useProductImages } from "@/lib/product-images";
@@ -40,6 +39,17 @@ export const Route = createFileRoute("/")({
 
 type CartLine = Product & { qty: number; size?: string | undefined; key: string };
 
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+/** The five curated edits shown in the Discover section. `dept` links an edit to a shop department. */
+const EDITS: { title: string; blurb: string; dept?: string; all?: boolean }[] = [
+  { title: "The Wardrobe", blurb: "Fashion.", all: true },
+  { title: "The Art Edit", blurb: "African art and creative collaborations." },
+  { title: "The Beauty Cabinet", blurb: "Beauty and fragrance." },
+  { title: "The Objects Edit", blurb: "Accessories and lifestyle.", dept: "accessories" },
+  { title: "The Gift Collection", blurb: "Thoughtful finds for the people she loves." },
+];
+
 function Shop() {
   const { data } = useSuspenseQuery(storefrontQuery);
   const { products, departments } = data;
@@ -57,6 +67,7 @@ function Shop() {
   const list = useMemo(() => visibleProducts(products, departments, filter, query), [products, departments, filter, query]);
   const newArrivals = useMemo(() => visibleProducts(products, departments, "new").slice(0, 4), [products, departments]);
   const openDepts = departments.filter((d) => d.enabled);
+  const deptOpen = (id: string) => departments.find((d) => d.id === id)?.enabled ?? false;
   const count = cart.reduce((n, l) => n + l.qty, 0);
   const total = cart.reduce((n, l) => n + l.qty * l.price, 0);
 
@@ -73,13 +84,24 @@ function Shop() {
 
   const pick = (f: Filter) => {
     setFilter(f);
-    document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" });
+    scrollToId("collection");
   };
 
   const openBag = () => {
     if (step === "done") setStep("bag");
     setBagOpen(true);
   };
+
+  /** Main menu. Shop items follow the shop's departments and show "Soon" while a department is closed. */
+  const menu: { label: string; go: () => void; soon?: boolean }[] = [
+    { label: "Home", go: () => window.scrollTo({ top: 0, behavior: "smooth" }) },
+    { label: "New In", go: () => pick("new") },
+    { label: "Women", go: () => pick("women"), soon: !deptOpen("women") },
+    { label: "Men", go: () => pick("men"), soon: !deptOpen("men") },
+    { label: "Baby & Little Ones", go: () => pick("kids"), soon: !deptOpen("kids") },
+    { label: "Accessories", go: () => pick("accessories"), soon: !deptOpen("accessories") },
+    { label: "Discover", go: () => scrollToId("discover") },
+  ];
 
   const submitOrder = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -173,24 +195,22 @@ function Shop() {
             <ShoppingBag /> Bag ({count})
           </Button>
         </div>
-        <nav aria-label="Departments" className="border-t border-border bg-cream">
-          <div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-2 px-5 py-3">
-            <button onClick={() => pick("new")} className="rounded-full border border-gold/50 px-4 py-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-gold hover:text-gold-foreground">
-              New arrivals
-            </button>
-            {departments.map((d) =>
-              d.enabled ? (
-                <button key={d.id} onClick={() => pick(d.id)} className="rounded-full border border-gold/50 px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-gold hover:text-gold-foreground">
-                  {d.label}
+        <nav aria-label="Main menu" className="border-t border-border bg-background">
+          <ul className="mx-auto flex max-w-7xl items-center gap-x-7 overflow-x-auto whitespace-nowrap px-5 py-3 md:justify-center md:gap-x-10 md:px-10">
+            {menu.map((m) => (
+              <li key={m.label}>
+                <button
+                  type="button"
+                  onClick={m.go}
+                  disabled={m.soon}
+                  className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70"
+                >
+                  {m.label}
+                  {m.soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[0.55rem] tracking-wider">Soon</span>}
                 </button>
-              ) : (
-                <span key={d.id} aria-disabled="true" className="flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground/70">
-                  {d.label}
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[0.6rem] uppercase tracking-wider">Soon</span>
-                </span>
-              ),
-            )}
-          </div>
+              </li>
+            ))}
+          </ul>
         </nav>
       </header>
 
@@ -263,6 +283,42 @@ function Shop() {
           )}
         </section>
 
+        <section id="discover" className="scroll-mt-32 bg-cream">
+          <div className="mx-auto max-w-7xl px-5 py-16 md:px-10">
+            <div className="text-center">
+              <p className="eyebrow text-gold">Discover</p>
+              <h2 className="mt-2 text-4xl font-bold md:text-5xl">The edits</h2>
+              <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Fashion, art, beauty and the objects we love, curated by Tsholo R Fashion House.</p>
+            </div>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {EDITS.map((e) => {
+                const live = e.all || (e.dept ? deptOpen(e.dept) : false);
+                const go = () => (e.all ? pick("all") : e.dept ? pick(e.dept) : undefined);
+                return (
+                  <article key={e.title} className="flex flex-col border border-border bg-card p-6 text-center">
+                    <h3 className="font-display text-2xl font-semibold leading-tight">{e.title}</h3>
+                    <p className="mt-3 flex-1 text-sm text-muted-foreground">{e.blurb}</p>
+                    {live ? (
+                      <button type="button" onClick={go} className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-gold underline-offset-4 hover:underline">Shop</button>
+                    ) : (
+                      <span className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">Coming soon</span>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* STORY: the owner's story goes here. Replace the placeholder text below once it is ready. */}
+        <section id="story" className="scroll-mt-32">
+          <div className="mx-auto max-w-3xl px-5 py-16 text-center md:px-10">
+            <p className="eyebrow text-gold">Our story</p>
+            <h2 className="mt-2 text-4xl font-bold md:text-5xl">Style that moves with you</h2>
+            <p className="mt-6 text-muted-foreground">Our story is coming soon.</p>
+          </div>
+        </section>
+
         <section className="bg-sand/60">
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 text-center sm:grid-cols-3 md:px-10">
             {[
@@ -332,8 +388,6 @@ function Shop() {
       >
         <MessageCircle className="size-5" /> <span className="hidden sm:inline">WhatsApp us</span>
       </a>
-
-      {data.shopVideo && <ShopVideo src={data.shopVideo} />}
 
       <ProductDialog product={viewing} mainImage={viewing ? images[viewing.id] : undefined} onClose={() => setViewing(null)} onAdd={add} />
 
