@@ -380,14 +380,6 @@ function Shop() {
         <Link to="/admin" className="mt-4 inline-block text-xs text-muted-foreground underline-offset-4 hover:underline">Owner sign in</Link>
       </footer>
 
-      <a
-        href={whatsappLink(SHOP_CONTACT.phone, "Hi Tsholo R Fashion House, I'd like to ask about")}
-        target="_blank" rel="noreferrer" aria-label="Chat with us on WhatsApp"
-        className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full bg-gold px-4 py-3 text-sm font-semibold text-gold-foreground shadow-card transition-transform hover:scale-105"
-      >
-        <MessageCircle className="size-5" /> <span className="hidden sm:inline">WhatsApp us</span>
-      </a>
-
       <ProductDialog product={viewing} mainImage={viewing ? images[viewing.id] : undefined} onClose={() => setViewing(null)} onAdd={add} />
 
       <Sheet open={bagOpen} onOpenChange={setBagOpen}>
