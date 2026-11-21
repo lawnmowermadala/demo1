@@ -77,6 +77,8 @@ function Shop() {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [bagOpen, setBagOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  /** "Our Story" is not on the main page: it opens only from the menu. */
+  const [showStory, setShowStory] = useState(false);
   const [step, setStep] = useState<"bag" | "details" | "done">("bag");
   const [placed, setPlaced] = useState<{ orderNumber: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -100,9 +102,15 @@ function Shop() {
   const change = (key: string, delta: number) =>
     setCart((c) => c.map((l) => (l.key === key ? { ...l, qty: Math.min(20, l.qty + delta) } : l)).filter((l) => l.qty > 0));
 
+  /** Goes back to the shop (if the story is open), then scrolls to a section once it is on the page. */
+  const goTo = (id: string) => {
+    setShowStory(false);
+    setTimeout(() => scrollToId(id), 60);
+  };
+
   const pick = (f: Filter) => {
     setFilter(f);
-    scrollToId("collection");
+    goTo("collection");
   };
 
   const openBag = () => {
@@ -112,14 +120,14 @@ function Shop() {
 
   /** Main menu, opened from the three-bar button at the top left. Shop items follow the shop's departments and show "Soon" while a department is closed. */
   const menu: { label: string; go: () => void; soon?: boolean }[] = [
-    { label: "Home", go: () => { setFilter("all"); setQuery(""); window.scrollTo({ top: 0, behavior: "smooth" }); } },
+    { label: "Home", go: () => { setShowStory(false); setFilter("all"); setQuery(""); window.scrollTo({ top: 0, behavior: "smooth" }); } },
     { label: "New In", go: () => pick("new") },
     { label: "Women", go: () => pick("women"), soon: !deptOpen("women") },
     { label: "Men", go: () => pick("men"), soon: !deptOpen("men") },
     { label: "Baby & Little Ones", go: () => pick("kids"), soon: !deptOpen("kids") },
     { label: "Accessories", go: () => pick("accessories"), soon: !deptOpen("accessories") },
-    { label: "Discover", go: () => scrollToId("discover") },
-    { label: "Our Story", go: () => scrollToId("story") },
+    { label: "Discover", go: () => goTo("discover") },
+    { label: "Our Story", go: () => { setShowStory(true); window.scrollTo({ top: 0 }); } },
   ];
 
   const submitOrder = async (e: FormEvent<HTMLFormElement>) => {
@@ -208,7 +216,7 @@ function Shop() {
           <label className="order-3 flex w-full items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 md:order-none md:ml-auto md:w-80">
             <Search className="size-4 text-muted-foreground" />
             <input
-              type="search" value={query} onChange={(e) => setQuery(e.target.value)}
+              type="search" value={query} onChange={(e) => { setQuery(e.target.value); setShowStory(false); }}
               placeholder="Search Ankara, Shweshwe, Kente…" aria-label="Search products"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
@@ -245,160 +253,167 @@ function Shop() {
       </Sheet>
 
       <main>
-        <section className="bg-cream">
-          <div className="mx-auto max-w-3xl px-5 py-14 text-center md:px-10 md:py-20">
-            <p className="eyebrow text-gold">Tsholo R Fashion House</p>
-            <h1 className="mt-3 text-5xl font-bold md:text-6xl">Style that moves with you</h1>
-            <p className="mt-4 text-muted-foreground">Contemporary African luxury. Dress with purpose.</p>
-          </div>
-        </section>
-        <div className="kente-rule" />
+        {showStory ? (
+          <section id="story">
+            <div className="mx-auto max-w-3xl px-5 py-20 text-center md:px-10">
+              <p className="eyebrow text-gold">Our story</p>
+              <h1 className="mt-2 text-4xl font-bold md:text-6xl">Style that moves with you</h1>
+              <div className="mx-auto mt-6 h-px w-16 bg-gold" />
+              <p className="mt-8 font-display text-2xl leading-snug md:text-3xl">
+                I grew up in Hammanskraal, raised by a seamstress mother whose creativity and dedication laid the foundation for my love of fashion.
+              </p>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                One of my favorite childhood memories is staying up late with her as she worked on custom orders for brides and wedding guests. Those nights were filled with stories, fabrics, and the quiet magic of creation. Her work ethic and passion taught me the value of excellence and care in every stitch. She remains my greatest inspiration and the person I look up to the most.
+              </p>
+              <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em]">Tsholofelo Raphala</p>
+              <p className="eyebrow mt-1 text-gold">Founder</p>
+            </div>
 
-        {newArrivals.length > 0 && (
-          <section className="bg-cream">
-            <div className="mx-auto max-w-7xl px-5 py-14 md:px-10">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="eyebrow text-gold">Just landed</p>
-                  <h2 className="mt-2 text-4xl font-bold">New arrivals</h2>
+            <div className="bg-cream">
+              <div className="mx-auto max-w-7xl px-5 py-14 md:px-10">
+                <div className="grid gap-4 md:grid-cols-3">
+                  {STORY_BLOCKS.map((b) => (
+                    <article key={b.title} className="border border-border bg-card p-7">
+                      <h3 className="font-display text-2xl font-semibold">{b.title}</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{b.text}</p>
+                    </article>
+                  ))}
                 </div>
-                <button onClick={() => pick("new")} className="text-sm font-semibold text-gold underline-offset-4 hover:underline">See all new pieces</button>
               </div>
-              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
-                {newArrivals.map((p) => card(p))}
+            </div>
+
+            <div className="mx-auto max-w-3xl px-5 py-16 md:px-10">
+              <div className="text-center">
+                <p className="eyebrow text-gold">Looking ahead</p>
+                <h3 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Where we see ourselves in five years</h3>
+              </div>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                In five years, I see Tsholo R growing into a global fashion brand that works with major retailers to bring African-inspired ready-to-wear clothing to a wider market. I want to create job opportunities, mentor aspiring designers, and participate in local and international fashion shows. I also envision expanding the brand to include home items that reflect the same fusion of modern simplicity and African heritage.
+              </p>
+              <div className="mt-12 border-t border-border pt-12 text-center">
+                <p className="eyebrow text-gold">The programme</p>
+                <h3 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Inhlanyelo Hub Bosadi Artisan Fashion Design Programme</h3>
+              </div>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                The Bosadi Artisan Fashion Design Programme came at the perfect time in my life, just when I was ready to take the next step in my fashion journey. It gave me a platform to explore the real possibility of turning my passion into a business. More than that, it opened my eyes to how fashion can be a tool for empowerment, helping reduce unemployment and create meaningful opportunities in our communities.
+              </p>
+              <div className="mt-12 text-center">
+                <Button variant="gold" size="xl" onClick={() => { setShowStory(false); window.scrollTo({ top: 0 }); }}>Back to the shop</Button>
               </div>
             </div>
           </section>
-        )}
+        ) : (
+          <>
+            <section className="bg-cream">
+              <div className="mx-auto max-w-3xl px-5 py-14 text-center md:px-10 md:py-20">
+                <p className="eyebrow text-gold">Tsholo R Fashion House</p>
+                <h1 className="mt-3 text-5xl font-bold md:text-6xl">Style that moves with you</h1>
+                <p className="mt-4 text-muted-foreground">Contemporary African luxury. Dress with purpose.</p>
+              </div>
+            </section>
+            <div className="kente-rule" />
 
-        <section id="collection" className="mx-auto max-w-7xl scroll-mt-32 px-5 py-16 md:px-10">
-          {list.length ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
-              {list.map((p) => card(p))}
-            </div>
-          ) : (
-            <p className="py-16 text-center text-muted-foreground">{query ? `No pieces match “${query}”.` : "No pieces here yet."}</p>
-          )}
-        </section>
+            {newArrivals.length > 0 && (
+              <section className="bg-cream">
+                <div className="mx-auto max-w-7xl px-5 py-14 md:px-10">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="eyebrow text-gold">Just landed</p>
+                      <h2 className="mt-2 text-4xl font-bold">New arrivals</h2>
+                    </div>
+                    <button onClick={() => pick("new")} className="text-sm font-semibold text-gold underline-offset-4 hover:underline">See all new pieces</button>
+                  </div>
+                  <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
+                    {newArrivals.map((p) => card(p))}
+                  </div>
+                </div>
+              </section>
+            )}
 
-        <section id="discover" className="scroll-mt-32 bg-cream">
-          <div className="mx-auto max-w-7xl px-5 py-16 md:px-10">
-            <div className="text-center">
-              <p className="eyebrow text-gold">Discover</p>
-              <h2 className="mt-2 text-4xl font-bold md:text-5xl">The edits</h2>
-              <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Fashion, art, beauty and the objects we love, curated by Tsholo R Fashion House.</p>
-            </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {EDITS.map((e) => {
-                const live = e.all || (e.dept ? deptOpen(e.dept) : false);
-                const go = () => (e.all ? pick("all") : e.dept ? pick(e.dept) : undefined);
-                return (
-                  <article key={e.title} className="flex flex-col border border-border bg-card p-6 text-center">
-                    <h3 className="font-display text-2xl font-semibold leading-tight">{e.title}</h3>
-                    <p className="mt-3 flex-1 text-sm text-muted-foreground">{e.blurb}</p>
-                    {live ? (
-                      <button type="button" onClick={go} className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-gold underline-offset-4 hover:underline">Shop</button>
-                    ) : (
-                      <span className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">Coming soon</span>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+            <section id="collection" className="mx-auto max-w-7xl scroll-mt-32 px-5 py-16 md:px-10">
+              {list.length ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
+                  {list.map((p) => card(p))}
+                </div>
+              ) : (
+                <p className="py-16 text-center text-muted-foreground">{query ? `No pieces match “${query}”.` : "No pieces here yet."}</p>
+              )}
+            </section>
 
-        <section id="story" className="scroll-mt-32">
-          <div className="mx-auto max-w-3xl px-5 py-20 text-center md:px-10">
-            <p className="eyebrow text-gold">Our story</p>
-            <h2 className="mt-2 text-4xl font-bold md:text-6xl">Style that moves with you</h2>
-            <div className="mx-auto mt-6 h-px w-16 bg-gold" />
-            <p className="mt-8 font-display text-2xl leading-snug md:text-3xl">
-              I grew up in Hammanskraal, raised by a seamstress mother whose creativity and dedication laid the foundation for my love of fashion.
-            </p>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              One of my favorite childhood memories is staying up late with her as she worked on custom orders for brides and wedding guests. Those nights were filled with stories, fabrics, and the quiet magic of creation. Her work ethic and passion taught me the value of excellence and care in every stitch. She remains my greatest inspiration and the person I look up to the most.
-            </p>
-            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em]">Tsholofelo Raphala</p>
-            <p className="eyebrow mt-1 text-gold">Founder</p>
-          </div>
+            <section id="discover" className="scroll-mt-32 bg-cream">
+              <div className="mx-auto max-w-7xl px-5 py-16 md:px-10">
+                <div className="text-center">
+                  <p className="eyebrow text-gold">Discover</p>
+                  <h2 className="mt-2 text-4xl font-bold md:text-5xl">The edits</h2>
+                  <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Fashion, art, beauty and the objects we love, curated by Tsholo R Fashion House.</p>
+                </div>
+                <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                  {EDITS.map((e) => {
+                    const live = e.all || (e.dept ? deptOpen(e.dept) : false);
+                    const go = () => (e.all ? pick("all") : e.dept ? pick(e.dept) : undefined);
+                    return (
+                      <article key={e.title} className="flex flex-col border border-border bg-card p-6 text-center">
+                        <h3 className="font-display text-2xl font-semibold leading-tight">{e.title}</h3>
+                        <p className="mt-3 flex-1 text-sm text-muted-foreground">{e.blurb}</p>
+                        {live ? (
+                          <button type="button" onClick={go} className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-gold underline-offset-4 hover:underline">Shop</button>
+                        ) : (
+                          <span className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">Coming soon</span>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
 
-          <div className="bg-cream">
-            <div className="mx-auto max-w-7xl px-5 py-14 md:px-10">
-              <div className="grid gap-4 md:grid-cols-3">
-                {STORY_BLOCKS.map((b) => (
-                  <article key={b.title} className="border border-border bg-card p-7">
-                    <h3 className="font-display text-2xl font-semibold">{b.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{b.text}</p>
-                  </article>
+            <section className="bg-sand/60">
+              <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 text-center sm:grid-cols-3 md:px-10">
+                {[
+                  { icon: Sparkles, t: "Culture-led style", s: "African inspiration, modern expression" },
+                  { icon: ShieldCheck, t: "Pay on confirmation", s: "Online payments coming soon" },
+                  { icon: Truck, t: "Delivery options", s: "Shipping across South Africa" },
+                ].map(({ icon: Icon, t, s }) => (
+                  <div key={t}>
+                    <Icon className="mx-auto size-6 text-gold" />
+                    <p className="mt-3 font-display text-xl font-semibold">{t}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{s}</p>
+                  </div>
                 ))}
               </div>
-            </div>
-          </div>
+            </section>
 
-          <div className="mx-auto max-w-3xl px-5 py-16 md:px-10">
-            <div className="text-center">
-              <p className="eyebrow text-gold">Looking ahead</p>
-              <h3 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Where we see ourselves in five years</h3>
-            </div>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              In five years, I see Tsholo R growing into a global fashion brand that works with major retailers to bring African-inspired ready-to-wear clothing to a wider market. I want to create job opportunities, mentor aspiring designers, and participate in local and international fashion shows. I also envision expanding the brand to include home items that reflect the same fusion of modern simplicity and African heritage.
-            </p>
-            <div className="mt-12 border-t border-border pt-12 text-center">
-              <p className="eyebrow text-gold">The programme</p>
-              <h3 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Inhlanyelo Hub Bosadi Artisan Fashion Design Programme</h3>
-            </div>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              The Bosadi Artisan Fashion Design Programme came at the perfect time in my life, just when I was ready to take the next step in my fashion journey. It gave me a platform to explore the real possibility of turning my passion into a business. More than that, it opened my eyes to how fashion can be a tool for empowerment, helping reduce unemployment and create meaningful opportunities in our communities.
-            </p>
-          </div>
-        </section>
+            <Testimonials items={data.testimonials} products={products.map((p) => ({ id: p.id, name: p.name }))} />
 
-        <section className="bg-sand/60">
-          <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 text-center sm:grid-cols-3 md:px-10">
-            {[
-              { icon: Sparkles, t: "Culture-led style", s: "African inspiration, modern expression" },
-              { icon: ShieldCheck, t: "Pay on confirmation", s: "Online payments coming soon" },
-              { icon: Truck, t: "Delivery options", s: "Shipping across South Africa" },
-            ].map(({ icon: Icon, t, s }) => (
-              <div key={t}>
-                <Icon className="mx-auto size-6 text-gold" />
-                <p className="mt-3 font-display text-xl font-semibold">{t}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{s}</p>
+            <section id="contact" className="mx-auto max-w-7xl px-5 py-16 md:px-10">
+              <div className="text-center">
+                <p className="eyebrow text-gold">Get in touch</p>
+                <h2 className="mt-2 text-4xl font-bold">Visit or contact us</h2>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <Testimonials items={data.testimonials} products={products.map((p) => ({ id: p.id, name: p.name }))} />
-
-        <section id="contact" className="mx-auto max-w-7xl px-5 py-16 md:px-10">
-          <div className="text-center">
-            <p className="eyebrow text-gold">Get in touch</p>
-            <h2 className="mt-2 text-4xl font-bold">Visit or contact us</h2>
-          </div>
-          <div className="mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-3">
-            <div className="border border-border bg-card p-6 text-center">
-              <MapPin className="mx-auto size-6 text-gold" />
-              <p className="mt-3 font-display text-xl font-semibold">Address</p>
-              <address className="mt-2 text-sm not-italic leading-relaxed text-muted-foreground">
-                {SHOP_CONTACT.addressLines.map((l) => <span key={l} className="block">{l}</span>)}
-              </address>
-            </div>
-            <a href={whatsappLink(SHOP_CONTACT.phone, "Hi Tsholo R Fashion House, I'd like to ask about")} target="_blank" rel="noreferrer" className="border border-border bg-card p-6 text-center transition-shadow hover:shadow-card">
-              <MessageCircle className="mx-auto size-6 text-gold" />
-              <p className="mt-3 font-display text-xl font-semibold">WhatsApp</p>
-              <p className="mt-2 text-sm text-muted-foreground">{SHOP_CONTACT.phone}</p>
-              <p className="mt-1 text-xs font-semibold text-gold">Chat with us</p>
-            </a>
-            <a href={telLink(SHOP_CONTACT.phone)} className="border border-border bg-card p-6 text-center transition-shadow hover:shadow-card">
-              <Phone className="mx-auto size-6 text-gold" />
-              <p className="mt-3 font-display text-xl font-semibold">Call us</p>
-              <p className="mt-2 text-sm text-muted-foreground">{SHOP_CONTACT.phone}</p>
-              <p className="mt-1 text-xs font-semibold text-gold">Tap to call</p>
-            </a>
-          </div>
-        </section>
+              <div className="mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-3">
+                <div className="border border-border bg-card p-6 text-center">
+                  <MapPin className="mx-auto size-6 text-gold" />
+                  <p className="mt-3 font-display text-xl font-semibold">Address</p>
+                  <address className="mt-2 text-sm not-italic leading-relaxed text-muted-foreground">
+                    {SHOP_CONTACT.addressLines.map((l) => <span key={l} className="block">{l}</span>)}
+                  </address>
+                </div>
+                <a href={whatsappLink(SHOP_CONTACT.phone, "Hi Tsholo R Fashion House, I'd like to ask about")} target="_blank" rel="noreferrer" className="border border-border bg-card p-6 text-center transition-shadow hover:shadow-card">
+                  <MessageCircle className="mx-auto size-6 text-gold" />
+                  <p className="mt-3 font-display text-xl font-semibold">WhatsApp</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{SHOP_CONTACT.phone}</p>
+                  <p className="mt-1 text-xs font-semibold text-gold">Chat with us</p>
+                </a>
+                <a href={telLink(SHOP_CONTACT.phone)} className="border border-border bg-card p-6 text-center transition-shadow hover:shadow-card">
+                  <Phone className="mx-auto size-6 text-gold" />
+                  <p className="mt-3 font-display text-xl font-semibold">Call us</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{SHOP_CONTACT.phone}</p>
+                  <p className="mt-1 text-xs font-semibold text-gold">Tap to call</p>
+                </a>
+              </div>
+            </section>
+          </>
+        )}
       </main>
 
       <div className="kente-rule" />
