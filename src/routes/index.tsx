@@ -119,7 +119,7 @@ function Shop() {
   };
 
   /** Main menu, opened from the three-bar button at the top left. Shop items follow the shop's departments and show "Soon" while a department is closed. */
-  const menu: { label: string; go: () => void; soon?: boolean }[] = [
+  const menu: { label: string; go: () => void; soon?: boolean; sub?: boolean }[] = [
     { label: "Home", go: () => { setShowStory(false); setFilter("all"); setQuery(""); window.scrollTo({ top: 0, behavior: "smooth" }); } },
     { label: "New In", go: () => pick("new") },
     { label: "Women", go: () => pick("women"), soon: !deptOpen("women") },
@@ -127,6 +127,12 @@ function Shop() {
     { label: "Baby & Little Ones", go: () => pick("kids"), soon: !deptOpen("kids") },
     { label: "Accessories", go: () => pick("accessories"), soon: !deptOpen("accessories") },
     { label: "Discover", go: () => goTo("discover") },
+    ...EDITS.map((e) => ({
+      label: e.title,
+      sub: true,
+      soon: !(e.all || (e.dept ? deptOpen(e.dept) : false)),
+      go: () => (e.all ? pick("all") : e.dept ? pick(e.dept) : goTo("discover")),
+    })),
     { label: "Our Story", go: () => { setShowStory(true); window.scrollTo({ top: 0 }); } },
   ];
 
@@ -240,7 +246,7 @@ function Shop() {
                     type="button"
                     disabled={m.soon}
                     onClick={() => { setMenuOpen(false); m.go(); }}
-                    className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70"
+                    className={`flex w-full items-center justify-between text-left transition-colors hover:text-gold disabled:cursor-default disabled:text-muted-foreground/70 disabled:hover:text-muted-foreground/70 ${m.sub ? "py-3 pl-4 font-display text-lg text-foreground" : "py-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground"}`}
                   >
                     {m.label}
                     {m.soon && <span className="rounded-full bg-muted px-2 py-0.5 text-[0.55rem] tracking-wider">Soon</span>}
