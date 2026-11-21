@@ -52,13 +52,20 @@ const EDITS: { title: string; blurb: string; dept?: string; all?: boolean }[] = 
   { title: "The Gift Collection", blurb: "Thoughtful finds for the people she loves." },
 ];
 
-/** The brand direction shown in "Our story". */
-const STORY_PILLARS = [
-  "Contemporary African luxury.",
-  "Editorial, artistic and sophisticated.",
-  "Minimal but expressive.",
-  "Strong photography and visual storytelling.",
-  "A refined and consistent customer experience.",
+/** The founder's own words (from her Inhlanyelo Hub Bosadi Artisan Fashion Design Programme questionnaire). */
+const STORY_BLOCKS: { title: string; text: string }[] = [
+  {
+    title: "Our designs",
+    text: "My theme connects simple lines with ready-to-wear clothing, creating elegant yet accessible pieces. I’ve incorporated African prints alongside modern fabrics to fuse tradition with contemporary style. The result is a versatile collection that celebrates heritage while remaining fashion-forward.",
+  },
+  {
+    title: "Our business",
+    text: "My business is called Tsholo R. It focuses on creating stylish, ready-to-wear clothing that merges African prints with modern designs. The aim is to offer versatile, culturally inspired fashion that fits seamlessly into everyday life, whether for work, events, or casual outings. Tsholo R represents confidence, simplicity, and cultural pride.",
+  },
+  {
+    title: "What makes us unique",
+    text: "Tsholo R stands out because it combines simplicity with cultural depth. While many brands focus on either tradition or modernity, Tsholo R blends both African prints meet clean, modern lines to create pieces that are stylish, comfortable, and meaningful. The designs are wearable, elegant, and speak to identity and everyday confidence.",
+  },
 ];
 
 function Shop() {
@@ -78,7 +85,6 @@ function Shop() {
 
   const list = useMemo(() => [...visibleProducts(products, departments, filter, query)].sort(womenFirst), [products, departments, filter, query]);
   const newArrivals = useMemo(() => [...visibleProducts(products, departments, "new")].sort(womenFirst).slice(0, 4), [products, departments]);
-  const openDepts = departments.filter((d) => d.enabled);
   const deptOpen = (id: string) => departments.find((d) => d.id === id)?.enabled ?? false;
   const count = cart.reduce((n, l) => n + l.qty, 0);
   const total = cart.reduce((n, l) => n + l.qty * l.price, 0);
@@ -106,7 +112,7 @@ function Shop() {
 
   /** Main menu, opened from the three-bar button at the top left. Shop items follow the shop's departments and show "Soon" while a department is closed. */
   const menu: { label: string; go: () => void; soon?: boolean }[] = [
-    { label: "Home", go: () => window.scrollTo({ top: 0, behavior: "smooth" }) },
+    { label: "Home", go: () => { setFilter("all"); setQuery(""); window.scrollTo({ top: 0, behavior: "smooth" }); } },
     { label: "New In", go: () => pick("new") },
     { label: "Women", go: () => pick("women"), soon: !deptOpen("women") },
     { label: "Men", go: () => pick("men"), soon: !deptOpen("men") },
@@ -266,23 +272,6 @@ function Shop() {
         )}
 
         <section id="collection" className="mx-auto max-w-7xl scroll-mt-32 px-5 py-16 md:px-10">
-          <div className="text-center">
-            <p className="eyebrow text-gold">The collection</p>
-            <h2 className="mt-2 text-4xl font-bold md:text-5xl">Shop African fashion</h2>
-            <p className="mt-3 text-muted-foreground">
-              {openDepts.map((d) => d.label).join(" & ")}
-              {departments.some((d) => !d.enabled) && ` · ${departments.filter((d) => !d.enabled).map((d) => d.label).join(" & ")} arriving soon`}
-            </p>
-          </div>
-
-          <div className="my-8 flex flex-wrap justify-center gap-2">
-            {(["all", "new", ...openDepts.map((d) => d.id)] as Filter[]).map((f) => (
-              <Button key={f} variant="chip" size="sm" className="h-9 rounded-full px-5" data-active={filter === f} onClick={() => setFilter(f)}>
-                {f === "all" ? `All (${visibleProducts(products, departments).length})` : f === "new" ? "New arrivals" : departments.find((d) => d.id === f)?.label}
-              </Button>
-            ))}
-          </div>
-
           {list.length ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
               {list.map((p) => card(p))}
@@ -325,32 +314,43 @@ function Shop() {
             <h2 className="mt-2 text-4xl font-bold md:text-6xl">Style that moves with you</h2>
             <div className="mx-auto mt-6 h-px w-16 bg-gold" />
             <p className="mt-8 font-display text-2xl leading-snug md:text-3xl">
-              A sophisticated, contemporary luxury experience for Tsholo R Fashion House.
+              I grew up in Hammanskraal, raised by a seamstress mother whose creativity and dedication laid the foundation for my love of fashion.
             </p>
-            <div className="mt-6 space-y-5 text-base leading-relaxed text-muted-foreground">
-              <p>
-                We combine the visual appeal and storytelling of an international luxury fashion house with the functionality of a high-performing online store.
-              </p>
-              <p>
-                We want you to experience the brand through its imagery, creative presentation, collections and curated discoveries, with effortless access to purchasing products. The brand communicates through its visual identity and presentation rather than lengthy explanations.
-              </p>
-            </div>
+            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+              One of my favorite childhood memories is staying up late with her as she worked on custom orders for brides and wedding guests. Those nights were filled with stories, fabrics, and the quiet magic of creation. Her work ethic and passion taught me the value of excellence and care in every stitch. She remains my greatest inspiration and the person I look up to the most.
+            </p>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em]">Tsholofelo Raphala</p>
+            <p className="eyebrow mt-1 text-gold">Founder</p>
           </div>
+
           <div className="bg-cream">
             <div className="mx-auto max-w-7xl px-5 py-14 md:px-10">
-              <p className="eyebrow text-center text-gold">Our direction</p>
-              <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                {STORY_PILLARS.map((t, i) => (
-                  <li key={t} className="border border-border bg-card p-6 text-center">
-                    <span className="eyebrow text-gold">{String(i + 1).padStart(2, "0")}</span>
-                    <p className="mt-3 font-display text-xl font-semibold leading-snug">{t}</p>
-                  </li>
+              <div className="grid gap-4 md:grid-cols-3">
+                {STORY_BLOCKS.map((b) => (
+                  <article key={b.title} className="border border-border bg-card p-7">
+                    <h3 className="font-display text-2xl font-semibold">{b.title}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{b.text}</p>
+                  </article>
                 ))}
-              </ul>
-              <p className="mx-auto mt-12 max-w-2xl text-center font-display text-2xl leading-snug md:text-3xl">
-                A lasting digital home for Tsholo R Fashion House, not simply an online product catalogue.
-              </p>
+              </div>
             </div>
+          </div>
+
+          <div className="mx-auto max-w-3xl px-5 py-16 md:px-10">
+            <div className="text-center">
+              <p className="eyebrow text-gold">Looking ahead</p>
+              <h3 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Where we see ourselves in five years</h3>
+            </div>
+            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+              In five years, I see Tsholo R growing into a global fashion brand that works with major retailers to bring African-inspired ready-to-wear clothing to a wider market. I want to create job opportunities, mentor aspiring designers, and participate in local and international fashion shows. I also envision expanding the brand to include home items that reflect the same fusion of modern simplicity and African heritage.
+            </p>
+            <div className="mt-12 border-t border-border pt-12 text-center">
+              <p className="eyebrow text-gold">The programme</p>
+              <h3 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Inhlanyelo Hub Bosadi Artisan Fashion Design Programme</h3>
+            </div>
+            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+              The Bosadi Artisan Fashion Design Programme came at the perfect time in my life, just when I was ready to take the next step in my fashion journey. It gave me a platform to explore the real possibility of turning my passion into a business. More than that, it opened my eyes to how fashion can be a tool for empowerment, helping reduce unemployment and create meaningful opportunities in our communities.
+            </p>
           </div>
         </section>
 
