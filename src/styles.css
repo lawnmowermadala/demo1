@@ -82,12 +82,13 @@
 
 :root {
   --radius: 0.25rem;
-  /* Editorial look: ivory and near-black like a luxury fashion house, with a muted bronze accent
-     that echoes the gold in the hero banner. Reference: thebemagugu.com. */
+  /* Editorial look: ivory and near-black like a luxury fashion house (reference: thebemagugu.com).
+     No brown or bronze accent: the "gold" tokens are now a deep charcoal so buttons, labels and
+     links all stay inside the ivory and black concept. */
   --ink: oklch(0.2 0 0);
   --ink-foreground: oklch(0.98 0 0);
-  --gold: oklch(0.55 0.08 70);
-  --gold-foreground: oklch(0.99 0.005 80);
+  --gold: oklch(0.22 0 0);
+  --gold-foreground: oklch(0.99 0 0);
   --gold-soft: oklch(0.94 0.012 80);
   --cream: oklch(0.975 0.006 80);
   --sand: oklch(0.94 0.01 80);
@@ -109,12 +110,12 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.88 0.008 80);
   --input: oklch(0.88 0.008 80);
-  --ring: oklch(0.55 0.08 70);
-  --chart-1: oklch(0.55 0.08 70);
-  --chart-2: oklch(0.72 0.05 70);
-  --chart-3: oklch(0.2 0 0);
-  --chart-4: oklch(0.82 0.04 70);
-  --chart-5: oklch(0.45 0.06 60);
+  --ring: oklch(0.45 0 0);
+  --chart-1: oklch(0.22 0 0);
+  --chart-2: oklch(0.45 0 0);
+  --chart-3: oklch(0.62 0 0);
+  --chart-4: oklch(0.78 0 0);
+  --chart-5: oklch(0.9 0 0);
   --sidebar: oklch(0.975 0.006 80);
   --sidebar-foreground: oklch(0.2 0 0);
   --sidebar-primary: oklch(0.2 0 0);
@@ -122,11 +123,11 @@
   --sidebar-accent: oklch(0.94 0.012 80);
   --sidebar-accent-foreground: oklch(0.2 0 0);
   --sidebar-border: oklch(0.88 0.008 80);
-  --sidebar-ring: oklch(0.55 0.08 70);
+  --sidebar-ring: oklch(0.45 0 0);
   --rose-light: oklch(0.85 0.03 80);
   --rose-deep: oklch(0.3 0 0);
   --gradient-hero: linear-gradient(90deg, oklch(0.99 0.003 80 / 0.96) 0%, oklch(0.99 0.003 80 / 0.82) 38%, oklch(0.99 0.003 80 / 0) 70%);
-  --shadow-gold-value: 0 10px 30px -12px oklch(0.55 0.08 70 / 0.45);
+  --shadow-gold-value: 0 10px 30px -12px oklch(0.2 0 0 / 0.35);
   --shadow-card-value: 0 20px 40px -24px oklch(0.2 0 0 / 0.25);
 }
 
@@ -157,8 +158,8 @@
 }
 
 @utility kente-rule {
-  height: 2px;
-  background-image: linear-gradient(90deg, var(--rose-deep), var(--rose-light) 25%, var(--gold) 50%, var(--rose-light) 75%, var(--rose-deep));
+  height: 1px;
+  background-image: linear-gradient(90deg, transparent, var(--ink) 50%, transparent);
 }
 
 @keyframes rise {
