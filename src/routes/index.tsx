@@ -43,7 +43,7 @@ const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({
 /** Keeps the shop's own order but lists women's products first. */
 const womenFirst = (a: Product, b: Product) => Number(b.department === "women") - Number(a.department === "women");
 
-/** The five curated edits shown in the Discover section. `dept` links an edit to a shop department. */
+/** The five curated edits shown as sub-items under Discover in the menu. `dept` links an edit to a shop department. */
 const EDITS: { title: string; blurb: string; dept?: string; all?: boolean }[] = [
   { title: "The Wardrobe", blurb: "Fashion.", all: true },
   { title: "The Art Edit", blurb: "African art and creative collaborations.", dept: "art" },
@@ -126,12 +126,12 @@ function Shop() {
     { label: "Men", go: () => pick("men"), soon: !deptOpen("men") },
     { label: "Baby & Little Ones", go: () => pick("kids"), soon: !deptOpen("kids") },
     { label: "Accessories", go: () => pick("accessories"), soon: !deptOpen("accessories") },
-    { label: "Discover", go: () => goTo("discover") },
+    { label: "Discover", go: () => goTo("collection") },
     ...EDITS.map((e) => ({
       label: e.title,
       sub: true,
       soon: !(e.all || (e.dept ? deptOpen(e.dept) : false)),
-      go: () => (e.all ? pick("all") : e.dept ? pick(e.dept) : goTo("discover")),
+      go: () => (e.all ? pick("all") : e.dept ? pick(e.dept) : goTo("collection")),
     })),
     { label: "Our Story", go: () => { setShowStory(true); window.scrollTo({ top: 0 }); } },
   ];
@@ -344,33 +344,6 @@ function Shop() {
               ) : (
                 <p className="py-16 text-center text-muted-foreground">{query ? `No pieces match “${query}”.` : "No pieces here yet."}</p>
               )}
-            </section>
-
-            <section id="discover" className="scroll-mt-32 bg-cream">
-              <div className="mx-auto max-w-7xl px-5 py-16 md:px-10">
-                <div className="text-center">
-                  <p className="eyebrow text-gold">Discover</p>
-                  <h2 className="mt-2 text-4xl font-bold md:text-5xl">The edits</h2>
-                  <p className="mx-auto mt-3 max-w-xl text-muted-foreground">Fashion, art, beauty and the objects we love, curated by Tsholo R Fashion House.</p>
-                </div>
-                <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                  {EDITS.map((e) => {
-                    const live = e.all || (e.dept ? deptOpen(e.dept) : false);
-                    const go = () => (e.all ? pick("all") : e.dept ? pick(e.dept) : undefined);
-                    return (
-                      <article key={e.title} className="flex flex-col border border-border bg-card p-6 text-center">
-                        <h3 className="font-display text-2xl font-semibold leading-tight">{e.title}</h3>
-                        <p className="mt-3 flex-1 text-sm text-muted-foreground">{e.blurb}</p>
-                        {live ? (
-                          <button type="button" onClick={go} className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-gold underline-offset-4 hover:underline">Shop</button>
-                        ) : (
-                          <span className="mt-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">Coming soon</span>
-                        )}
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
             </section>
 
             <section className="bg-sand/60">
